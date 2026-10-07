@@ -1,4 +1,4 @@
-# Lovable Properties
+# Convercion de Lovable a proyecto Real
 
 Marketplace de bienes raíces para promover propiedades comerciales, solares y locales en venta y renta.
 
