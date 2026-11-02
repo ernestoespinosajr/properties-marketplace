@@ -1,0 +1,55 @@
+[
+  {
+    "id": "inicial",
+    "nombre": "Paquete Inicial",
+    "rango": "De 3 a 5 propiedades",
+    "min_props": 3,
+    "max_props": 5,
+    "precio": 45,
+    "periodo": "USD / mes",
+    "destacado": false,
+    "beneficios": [
+      "Hasta 5 activos publicados",
+      "Ficha técnica con galería de fotos",
+      "Contacto directo por correo",
+      "Vigencia de 30 días por publicación"
+    ],
+    "orden": 1
+  },
+  {
+    "id": "profesional",
+    "nombre": "Paquete Profesional",
+    "rango": "De 5 a 20 propiedades",
+    "min_props": 5,
+    "max_props": 20,
+    "precio": 129,
+    "periodo": "USD / mes",
+    "destacado": true,
+    "beneficios": [
+      "Hasta 20 activos publicados",
+      "2 propiedades destacadas en portada",
+      "Perfil de agencia verificado",
+      "Estadísticas de visitas y contactos",
+      "Soporte prioritario"
+    ],
+    "orden": 2
+  },
+  {
+    "id": "corporativo",
+    "nombre": "Paquete Corporativo",
+    "rango": "De 20 propiedades en adelante",
+    "min_props": 20,
+    "max_props": null,
+    "precio": 349,
+    "periodo": "USD / mes",
+    "destacado": false,
+    "beneficios": [
+      "Inventario ilimitado",
+      "Posicionamiento preferente en búsquedas",
+      "Carga masiva del inventario",
+      "Asesor de cuenta dedicado",
+      "Reportes mensuales de desempeño"
+    ],
+    "orden": 3
+  }
+]

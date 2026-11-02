@@ -7,7 +7,9 @@ export const getRouter = () => {
 
   const router = createRouter({
     routeTree,
-    context: { queryClient },
+    // sesion se resuelve en el beforeLoad del root; aquí solo se siembra la
+    // forma del contexto para que las rutas la vean tipada.
+    context: { queryClient, sesion: null },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
   });

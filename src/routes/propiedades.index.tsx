@@ -2,24 +2,27 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PropertyCard } from "@/components/PropertyCard";
+import { listarPropiedades } from "@/server/propiedades";
+import { idsFavoritos } from "@/server/favoritos";
 import {
   ANTIGUEDADES,
   CATEGORIAS,
   DISPONIBILIDADES,
-  fetchProperties,
   type Categoria,
+  type Disponibilidad,
   type Operacion,
-} from "@/data/properties";
+} from "@/lib/tipos";
 
 type Search = {
-  categoria?: Categoria | "todos";
+  pagina: number;
+  categoria?: Categoria;
   operacion?: Operacion;
   q?: string;
   precioMin?: number;
   precioMax?: number;
   m2Min?: number;
   m2Max?: number;
-  disponibilidad?: string;
+  disponibilidad?: Disponibilidad;
   antiguedad?: string;
   orden?: string;
 };
@@ -29,24 +32,38 @@ const num = (v: unknown) => {
   return Number.isFinite(n) && n > 0 ? n : undefined;
 };
 
-const TITLE = "Propiedades comerciales en venta y renta | Activa Comercial";
+const unaDe = <T extends string>(v: unknown, opciones: readonly T[]): T | undefined =>
+  typeof v === "string" && (opciones as readonly string[]).includes(v) ? (v as T) : undefined;
+
+const TITLE = "Propiedades comerciales en venta y renta | Properties MarketPlace";
 const DESCRIPTION =
   "Explore el inventario completo de naves industriales, solares, locales y oficinas comerciales con filtros por precio, superficie, disponibilidad y antigüedad.";
 
 export const Route = createFileRoute("/propiedades/")({
-  loader: () => fetchProperties(),
   validateSearch: (search: Record<string, unknown>): Search => ({
-    categoria: (search.categoria as Search["categoria"]) || undefined,
-    operacion: (search.operacion as Operacion) || undefined,
-    q: typeof search.q === "string" ? search.q.slice(0, 80) : undefined,
+    pagina: Math.max(1, Math.trunc(Number(search.pagina)) || 1),
+    categoria: unaDe(search.categoria, ["industrial", "solar", "local", "oficina"] as const),
+    operacion: unaDe(search.operacion, ["venta", "renta"] as const),
+    q: typeof search.q === "string" && search.q.trim() ? search.q.slice(0, 80) : undefined,
     precioMin: num(search.precioMin),
     precioMax: num(search.precioMax),
     m2Min: num(search.m2Min),
     m2Max: num(search.m2Max),
-    disponibilidad: search.disponibilidad != null ? String(search.disponibilidad) : undefined,
-    antiguedad: search.antiguedad != null ? String(search.antiguedad) : undefined,
-    orden: search.orden != null ? String(search.orden) : undefined,
+    disponibilidad: unaDe(search.disponibilidad, ["inmediata", "30-dias", "preventa"] as const),
+    antiguedad: unaDe(
+      search.antiguedad,
+      ANTIGUEDADES.map((a) => a.id) as unknown as readonly string[],
+    ),
+    orden: typeof search.orden === "string" ? search.orden : undefined,
   }),
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps }) => {
+    const [pagina, favoritos] = await Promise.all([
+      listarPropiedades({ data: deps }),
+      idsFavoritos(),
+    ]);
+    return { pagina, favoritos };
+  },
   head: () => ({
     meta: [
       { title: TITLE },
@@ -70,9 +87,17 @@ const ORDENES = [
 ];
 
 function Listado() {
-  const properties = Route.useLoaderData();
+  const { pagina: resultado, favoritos } = Route.useLoaderData();
+  const { sesion } = Route.useRouteContext();
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/propiedades/" });
+  const guardadas = new Set(favoritos);
+
+  // Cualquier cambio de filtro vuelve a la página 1: mantener la 4 al estrechar
+  // la búsqueda dejaría al usuario mirando un listado vacío.
+  const set = (patch: Partial<Search>) =>
+    navigate({ search: (prev: Search) => ({ ...prev, ...patch, pagina: 1 }) });
+
   const {
     categoria,
     operacion,
@@ -86,54 +111,27 @@ function Listado() {
     orden,
   } = search;
 
-  const set = (patch: Partial<Search>) =>
-    navigate({ search: (prev: Search) => ({ ...prev, ...patch }) });
-
-  const maxAntiguedad = ANTIGUEDADES.find((a) => a.id === antiguedad)?.max;
-
-  const resultados = properties
-    .filter((p) => {
-      if (categoria && categoria !== "todos" && p.categoria !== categoria) return false;
-      if (operacion && p.operacion !== operacion) return false;
-      if (q && !`${p.titulo} ${p.ubicacion}`.toLowerCase().includes(q.toLowerCase())) return false;
-      if (precioMin && p.precio < precioMin) return false;
-      if (precioMax && p.precio > precioMax) return false;
-      if (m2Min && p.superficie < m2Min) return false;
-      if (m2Max && p.superficie > m2Max) return false;
-      if (disponibilidad && p.disponibilidad !== disponibilidad) return false;
-      if (maxAntiguedad !== undefined && p.antiguedad > maxAntiguedad) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      switch (orden) {
-        case "precio-asc":
-          return a.precio - b.precio;
-        case "precio-desc":
-          return b.precio - a.precio;
-        case "m2-desc":
-          return b.superficie - a.superficie;
-        case "m2-precio":
-          return a.precio / a.superficie - b.precio / b.superficie;
-        case "antiguedad-asc":
-          return a.antiguedad - b.antiguedad;
-        default:
-          return 0;
-      }
-    });
-
-  const filtrosActivos =
-    Boolean(precioMin || precioMax || m2Min || m2Max || disponibilidad || antiguedad || q) ||
-    Boolean(operacion) ||
-    (categoria && categoria !== "todos");
+  const filtrosActivos = Boolean(
+    precioMin ||
+    precioMax ||
+    m2Min ||
+    m2Max ||
+    disponibilidad ||
+    antiguedad ||
+    q ||
+    operacion ||
+    categoria,
+  );
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
-      <SiteHeader />
+      <SiteHeader sesion={sesion} />
       <section className="bg-secondary px-6 py-12">
         <div className="mx-auto max-w-6xl">
           <h1 className="text-3xl font-semibold">Inventario de activos</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {resultados.length} propiedades disponibles
+            {resultado.total}{" "}
+            {resultado.total === 1 ? "propiedad disponible" : "propiedades disponibles"}
             {q ? ` para “${q}”` : ""}
           </p>
         </div>
@@ -141,16 +139,24 @@ function Listado() {
 
       <section className="px-6 py-8">
         <div className="mx-auto flex max-w-6xl flex-wrap gap-3">
+          <Link
+            to="/propiedades"
+            search={{ ...search, categoria: undefined, pagina: 1 }}
+            className={`rounded-full px-4 py-2 text-sm font-medium ring-1 ring-black/5 transition-colors ${
+              !categoria
+                ? "bg-accent text-foreground"
+                : "bg-card text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            Todos los activos
+          </Link>
           {CATEGORIAS.map((c) => (
             <Link
               key={c.id}
               to="/propiedades"
-              search={(prev: Search) => ({
-                ...prev,
-                categoria: c.id === "todos" ? undefined : c.id,
-              })}
+              search={{ ...search, categoria: c.id, pagina: 1 }}
               className={`rounded-full px-4 py-2 text-sm font-medium ring-1 ring-black/5 transition-colors ${
-                (categoria ?? "todos") === c.id
+                categoria === c.id
                   ? "bg-accent text-foreground"
                   : "bg-card text-muted-foreground hover:bg-secondary"
               }`}
@@ -162,7 +168,7 @@ function Listado() {
             <Link
               key={op}
               to="/propiedades"
-              search={(prev: Search) => ({ ...prev, operacion: operacion === op ? undefined : op })}
+              search={{ ...search, operacion: operacion === op ? undefined : op, pagina: 1 }}
               className={`rounded-full px-4 py-2 text-sm font-medium capitalize ring-1 ring-black/5 transition-colors ${
                 operacion === op
                   ? "bg-primary text-primary-foreground"
@@ -185,7 +191,7 @@ function Listado() {
               {filtrosActivos && (
                 <Link
                   to="/propiedades"
-                  search={{}}
+                  search={{ pagina: 1 }}
                   className="text-xs font-medium text-primary underline"
                 >
                   Limpiar
@@ -204,7 +210,7 @@ function Listado() {
               />
             </Grupo>
 
-            <Grupo titulo="Precio (MXN)">
+            <Grupo titulo="Precio">
               <div className="flex gap-2">
                 <NumInput
                   placeholder="Mínimo"
@@ -264,7 +270,8 @@ function Listado() {
           <div>
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-muted-foreground">
-                {resultados.length} resultado{resultados.length === 1 ? "" : "s"}
+                {resultado.total} resultado{resultado.total === 1 ? "" : "s"}
+                {resultado.paginas > 1 && ` · página ${resultado.pagina} de ${resultado.paginas}`}
               </p>
               <label className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">Ordenar por</span>
@@ -284,22 +291,97 @@ function Listado() {
               </label>
             </div>
 
-            {resultados.length === 0 ? (
+            {resultado.items.length === 0 ? (
               <p className="py-16 text-center text-sm text-muted-foreground">
                 No hay activos que coincidan con estos filtros.
               </p>
             ) : (
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                {resultados.map((p) => (
-                  <PropertyCard key={p.id} property={p} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                  {resultado.items.map((p) => (
+                    <PropertyCard
+                      key={p.id}
+                      property={p}
+                      haySesion={Boolean(sesion)}
+                      favorita={guardadas.has(p.id)}
+                    />
+                  ))}
+                </div>
+                <Paginacion actual={resultado.pagina} total={resultado.paginas} search={search} />
+              </>
             )}
           </div>
         </div>
       </section>
       <SiteFooter />
     </div>
+  );
+}
+
+function Paginacion({ actual, total, search }: { actual: number; total: number; search: Search }) {
+  if (total <= 1) return null;
+
+  // Ventana de 5 páginas alrededor de la actual: con inventario grande, pintar
+  // un botón por página llenaría la pantalla de números.
+  const desde = Math.max(1, Math.min(actual - 2, total - 4));
+  const hasta = Math.min(total, desde + 4);
+  const paginas = Array.from({ length: hasta - desde + 1 }, (_, i) => desde + i);
+
+  return (
+    <nav aria-label="Paginación" className="mt-12 flex flex-wrap items-center justify-center gap-2">
+      <PasoPagina a={actual - 1} deshabilitado={actual === 1} search={search}>
+        Anterior
+      </PasoPagina>
+      {desde > 1 && <span className="px-1 text-sm text-muted-foreground">…</span>}
+      {paginas.map((p) => (
+        <Link
+          key={p}
+          to="/propiedades"
+          search={{ ...search, pagina: p }}
+          aria-current={p === actual ? "page" : undefined}
+          className={`min-w-10 rounded-lg px-3 py-2 text-center text-sm font-medium ring-1 transition-colors ${
+            p === actual
+              ? "bg-primary text-primary-foreground ring-primary"
+              : "bg-card text-muted-foreground ring-border hover:bg-secondary"
+          }`}
+        >
+          {p}
+        </Link>
+      ))}
+      {hasta < total && <span className="px-1 text-sm text-muted-foreground">…</span>}
+      <PasoPagina a={actual + 1} deshabilitado={actual === total} search={search}>
+        Siguiente
+      </PasoPagina>
+    </nav>
+  );
+}
+
+function PasoPagina({
+  a,
+  deshabilitado,
+  search,
+  children,
+}: {
+  a: number;
+  deshabilitado: boolean;
+  search: Search;
+  children: React.ReactNode;
+}) {
+  if (deshabilitado) {
+    return (
+      <span className="rounded-lg px-4 py-2 text-sm text-muted-foreground/50" aria-disabled="true">
+        {children}
+      </span>
+    );
+  }
+  return (
+    <Link
+      to="/propiedades"
+      search={{ ...search, pagina: a }}
+      className="rounded-lg bg-card px-4 py-2 text-sm font-medium text-muted-foreground ring-1 ring-border transition-colors hover:bg-secondary"
+    >
+      {children}
+    </Link>
   );
 }
 
@@ -348,7 +430,9 @@ function Opcion({
       type="button"
       onClick={onClick}
       className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-        activo ? "bg-secondary font-medium text-foreground" : "text-muted-foreground hover:bg-secondary/60"
+        activo
+          ? "bg-secondary font-medium text-foreground"
+          : "text-muted-foreground hover:bg-secondary/60"
       }`}
     >
       <span

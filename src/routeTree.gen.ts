@@ -10,24 +10,67 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PlanesRouteImport } from './routes/planes'
-import { Route as PublicarRouteImport } from './routes/publicar'
+import { Route as CuentaRouteImport } from './routes/cuenta'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as GuardadasRouteImport } from './routes/guardadas'
+import { Route as RegistroRouteImport } from './routes/registro'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAnunciosRouteImport } from './routes/admin.anuncios'
+import { Route as AdminCuentasRouteImport } from './routes/admin.cuentas'
+import { Route as PanelIndexRouteImport } from './routes/panel.index'
+import { Route as PanelConsultasRouteImport } from './routes/panel.consultas'
 import { Route as PropiedadesIndexRouteImport } from './routes/propiedades.index'
-import { Route as PropiedadesIdRouteImport } from './routes/propiedades.$id'
+import { Route as PropiedadesSlugRouteImport } from './routes/propiedades.$slug'
+import { Route as PanelPropiedadIdRouteImport } from './routes/panel.propiedad.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PlanesRoute = PlanesRouteImport.update({
-  id: '/planes',
-  path: '/planes',
+const CuentaRoute = CuentaRouteImport.update({
+  id: '/cuenta',
+  path: '/cuenta',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PublicarRoute = PublicarRouteImport.update({
-  id: '/publicar',
-  path: '/publicar',
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuardadasRoute = GuardadasRouteImport.update({
+  id: '/guardadas',
+  path: '/guardadas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegistroRoute = RegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAnunciosRoute = AdminAnunciosRouteImport.update({
+  id: '/admin/anuncios',
+  path: '/admin/anuncios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCuentasRoute = AdminCuentasRouteImport.update({
+  id: '/admin/cuentas',
+  path: '/admin/cuentas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanelIndexRoute = PanelIndexRouteImport.update({
+  id: '/panel/',
+  path: '/panel/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanelConsultasRoute = PanelConsultasRouteImport.update({
+  id: '/panel/consultas',
+  path: '/panel/consultas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PropiedadesIndexRoute = PropiedadesIndexRouteImport.update({
@@ -35,55 +78,125 @@ const PropiedadesIndexRoute = PropiedadesIndexRouteImport.update({
   path: '/propiedades/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PropiedadesIdRoute = PropiedadesIdRouteImport.update({
-  id: '/propiedades/$id',
-  path: '/propiedades/$id',
+const PropiedadesSlugRoute = PropiedadesSlugRouteImport.update({
+  id: '/propiedades/$slug',
+  path: '/propiedades/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanelPropiedadIdRoute = PanelPropiedadIdRouteImport.update({
+  id: '/panel/propiedad/$id',
+  path: '/panel/propiedad/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/planes': typeof PlanesRoute
-  '/publicar': typeof PublicarRoute
-  '/propiedades/$id': typeof PropiedadesIdRoute
+  '/cuenta': typeof CuentaRoute
+  '/entrar': typeof EntrarRoute
+  '/guardadas': typeof GuardadasRoute
+  '/registro': typeof RegistroRoute
+  '/admin/anuncios': typeof AdminAnunciosRoute
+  '/admin/cuentas': typeof AdminCuentasRoute
+  '/panel/consultas': typeof PanelConsultasRoute
+  '/propiedades/$slug': typeof PropiedadesSlugRoute
+  '/admin/': typeof AdminIndexRoute
+  '/panel/': typeof PanelIndexRoute
   '/propiedades/': typeof PropiedadesIndexRoute
+  '/panel/propiedad/$id': typeof PanelPropiedadIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/planes': typeof PlanesRoute
-  '/publicar': typeof PublicarRoute
-  '/propiedades/$id': typeof PropiedadesIdRoute
+  '/cuenta': typeof CuentaRoute
+  '/entrar': typeof EntrarRoute
+  '/guardadas': typeof GuardadasRoute
+  '/registro': typeof RegistroRoute
+  '/admin/anuncios': typeof AdminAnunciosRoute
+  '/admin/cuentas': typeof AdminCuentasRoute
+  '/panel/consultas': typeof PanelConsultasRoute
+  '/propiedades/$slug': typeof PropiedadesSlugRoute
+  '/admin': typeof AdminIndexRoute
+  '/panel': typeof PanelIndexRoute
   '/propiedades': typeof PropiedadesIndexRoute
+  '/panel/propiedad/$id': typeof PanelPropiedadIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/planes': typeof PlanesRoute
-  '/publicar': typeof PublicarRoute
-  '/propiedades/$id': typeof PropiedadesIdRoute
+  '/cuenta': typeof CuentaRoute
+  '/entrar': typeof EntrarRoute
+  '/guardadas': typeof GuardadasRoute
+  '/registro': typeof RegistroRoute
+  '/admin/anuncios': typeof AdminAnunciosRoute
+  '/admin/cuentas': typeof AdminCuentasRoute
+  '/panel/consultas': typeof PanelConsultasRoute
+  '/propiedades/$slug': typeof PropiedadesSlugRoute
+  '/admin/': typeof AdminIndexRoute
+  '/panel/': typeof PanelIndexRoute
   '/propiedades/': typeof PropiedadesIndexRoute
+  '/panel/propiedad/$id': typeof PanelPropiedadIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/planes' | '/publicar' | '/propiedades/$id' | '/propiedades/'
+    | '/'
+    | '/cuenta'
+    | '/entrar'
+    | '/guardadas'
+    | '/registro'
+    | '/admin/anuncios'
+    | '/admin/cuentas'
+    | '/panel/consultas'
+    | '/propiedades/$slug'
+    | '/admin/'
+    | '/panel/'
+    | '/propiedades/'
+    | '/panel/propiedad/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/planes' | '/publicar' | '/propiedades/$id' | '/propiedades'
+  to:
+    | '/'
+    | '/cuenta'
+    | '/entrar'
+    | '/guardadas'
+    | '/registro'
+    | '/admin/anuncios'
+    | '/admin/cuentas'
+    | '/panel/consultas'
+    | '/propiedades/$slug'
+    | '/admin'
+    | '/panel'
+    | '/propiedades'
+    | '/panel/propiedad/$id'
   id:
     | '__root__'
     | '/'
-    | '/planes'
-    | '/publicar'
-    | '/propiedades/$id'
+    | '/cuenta'
+    | '/entrar'
+    | '/guardadas'
+    | '/registro'
+    | '/admin/anuncios'
+    | '/admin/cuentas'
+    | '/panel/consultas'
+    | '/propiedades/$slug'
+    | '/admin/'
+    | '/panel/'
     | '/propiedades/'
+    | '/panel/propiedad/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PlanesRoute: typeof PlanesRoute
-  PublicarRoute: typeof PublicarRoute
-  PropiedadesIdRoute: typeof PropiedadesIdRoute
+  CuentaRoute: typeof CuentaRoute
+  EntrarRoute: typeof EntrarRoute
+  GuardadasRoute: typeof GuardadasRoute
+  RegistroRoute: typeof RegistroRoute
+  AdminAnunciosRoute: typeof AdminAnunciosRoute
+  AdminCuentasRoute: typeof AdminCuentasRoute
+  PanelConsultasRoute: typeof PanelConsultasRoute
+  PropiedadesSlugRoute: typeof PropiedadesSlugRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  PanelIndexRoute: typeof PanelIndexRoute
   PropiedadesIndexRoute: typeof PropiedadesIndexRoute
+  PanelPropiedadIdRoute: typeof PanelPropiedadIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -95,18 +208,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/planes': {
-      id: '/planes'
-      path: '/planes'
-      fullPath: '/planes'
-      preLoaderRoute: typeof PlanesRouteImport
+    '/cuenta': {
+      id: '/cuenta'
+      path: '/cuenta'
+      fullPath: '/cuenta'
+      preLoaderRoute: typeof CuentaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/publicar': {
-      id: '/publicar'
-      path: '/publicar'
-      fullPath: '/publicar'
-      preLoaderRoute: typeof PublicarRouteImport
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guardadas': {
+      id: '/guardadas'
+      path: '/guardadas'
+      fullPath: '/guardadas'
+      preLoaderRoute: typeof GuardadasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/registro': {
+      id: '/registro'
+      path: '/registro'
+      fullPath: '/registro'
+      preLoaderRoute: typeof RegistroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/anuncios': {
+      id: '/admin/anuncios'
+      path: '/admin/anuncios'
+      fullPath: '/admin/anuncios'
+      preLoaderRoute: typeof AdminAnunciosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/cuentas': {
+      id: '/admin/cuentas'
+      path: '/admin/cuentas'
+      fullPath: '/admin/cuentas'
+      preLoaderRoute: typeof AdminCuentasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panel/': {
+      id: '/panel/'
+      path: '/panel'
+      fullPath: '/panel/'
+      preLoaderRoute: typeof PanelIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panel/consultas': {
+      id: '/panel/consultas'
+      path: '/panel/consultas'
+      fullPath: '/panel/consultas'
+      preLoaderRoute: typeof PanelConsultasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/propiedades/': {
@@ -116,11 +278,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PropiedadesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/propiedades/$id': {
-      id: '/propiedades/$id'
-      path: '/propiedades/$id'
-      fullPath: '/propiedades/$id'
-      preLoaderRoute: typeof PropiedadesIdRouteImport
+    '/propiedades/$slug': {
+      id: '/propiedades/$slug'
+      path: '/propiedades/$slug'
+      fullPath: '/propiedades/$slug'
+      preLoaderRoute: typeof PropiedadesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panel/propiedad/$id': {
+      id: '/panel/propiedad/$id'
+      path: '/panel/propiedad/$id'
+      fullPath: '/panel/propiedad/$id'
+      preLoaderRoute: typeof PanelPropiedadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -128,10 +297,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PlanesRoute: PlanesRoute,
-  PublicarRoute: PublicarRoute,
-  PropiedadesIdRoute: PropiedadesIdRoute,
+  CuentaRoute: CuentaRoute,
+  EntrarRoute: EntrarRoute,
+  GuardadasRoute: GuardadasRoute,
+  RegistroRoute: RegistroRoute,
+  AdminAnunciosRoute: AdminAnunciosRoute,
+  AdminCuentasRoute: AdminCuentasRoute,
+  PanelConsultasRoute: PanelConsultasRoute,
+  PropiedadesSlugRoute: PropiedadesSlugRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  PanelIndexRoute: PanelIndexRoute,
   PropiedadesIndexRoute: PropiedadesIndexRoute,
+  PanelPropiedadIdRoute: PanelPropiedadIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

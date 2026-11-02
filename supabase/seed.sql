@@ -1,25 +1,75 @@
--- Datos actuales (los que estaban hardcoded en src/data) — correr después de schema.sql
+-- ---------------------------------------------------------------------------
+-- Datos de demostracion
+--
+-- Correr DESPUES de las migraciones y DESPUES de haber registrado al menos una
+-- cuenta de broker desde /registro. Las propiedades se asignan al broker mas
+-- antiguo que exista; si no hay ninguno, el script no hace nada y avisa.
+--
+-- Es idempotente: se puede correr las veces que haga falta.
+-- ---------------------------------------------------------------------------
 
-insert into plans (id, nombre, rango, min_props, max_props, precio, periodo, destacado, beneficios, orden) values
-('inicial', 'Paquete Inicial', 'De 3 a 5 propiedades', 3, 5, 45, 'USD / mes', false,
-  array['Hasta 5 activos publicados', 'Ficha técnica con galería de fotos', 'Contacto directo por correo', 'Vigencia de 30 días por publicación'], 1),
-('profesional', 'Paquete Profesional', 'De 5 a 20 propiedades', 5, 20, 129, 'USD / mes', true,
-  array['Hasta 20 activos publicados', '2 propiedades destacadas en portada', 'Perfil de agencia verificado', 'Estadísticas de visitas y contactos', 'Soporte prioritario'], 2),
-('corporativo', 'Paquete Corporativo', 'De 20 propiedades en adelante', 20, null, 349, 'USD / mes', false,
-  array['Inventario ilimitado', 'Posicionamiento preferente en búsquedas', 'Carga masiva del inventario', 'Asesor de cuenta dedicado', 'Reportes mensuales de desempeño'], 3)
-on conflict (id) do nothing;
+do $$
+declare
+  broker uuid;
+begin
+  select id into broker
+  from public.profiles
+  where rol = 'broker'
+  order by created_at
+  limit 1;
 
-insert into properties (id, titulo, ubicacion, operacion, categoria, precio, superficie, uso_suelo, disponibilidad, antiguedad, dato_label, dato_valor, imagen, descripcion) values
-('nave-logistica-tultitlan-iii', 'Nave Logística Tultitlán III', 'Parque Industrial, Estado de México', 'venta', 'industrial', 42500000, 4200, 'Industrial Pesado', 'inmediata', 2, 'Altura Libre', '12.5 metros', '/images/nave-industrial.jpg',
-  'Nave logística de última generación con andenes de carga, piso industrial de alta resistencia y acceso directo a corredor carretero. Ideal para operaciones de distribución regional.'),
-('macrolote-comercial-cancun', 'Macrolote Comercial Cancún', 'Zona Hotelera Norte, Quintana Roo', 'venta', 'solar', 18900000, 2850, 'Mixto Comercial', 'preventa', 0, 'Frente', '45 metros', '/images/solar-comercial.jpg',
-  'Solar urbano con uso de suelo mixto comercial y servicios municipales completos. Excelente frente sobre avenida primaria con alto flujo vehicular y peatonal.'),
-('local-flagship-polanco', 'Local Flagship Polanco', 'Av. Masaryk, Ciudad de México', 'renta', 'local', 145000, 185, 'Comercial AA', 'inmediata', 6, 'Disponibilidad', 'Inmediata', '/images/local-comercial.jpg',
-  'Local en esquina sobre el corredor comercial más exclusivo de la ciudad. Doble frente acristalado, altura de losa de 4.2 m y entrega en obra gris terminada.'),
-('corporativo-santa-fe-piso-14', 'Corporativo Santa Fe — Piso 14', 'Santa Fe, Ciudad de México', 'renta', 'oficina', 320000, 640, 'Oficinas AAA', '30-dias', 12, 'Estacionamientos', '18 cajones', '/images/oficina-prime.jpg',
-  'Piso completo en torre certificada LEED con planta libre, doble sistema de aire acondicionado y lobby de doble altura con seguridad 24/7.'),
-('parque-industrial-apodaca', 'Parque Industrial Apodaca — Módulo B', 'Apodaca, Nuevo León', 'renta', 'industrial', 410000, 6800, 'Industrial Ligero', '30-dias', 4, 'Andenes', '8 unidades', '/images/nave-industrial.jpg',
-  'Módulo industrial dentro de parque privado con caseta de acceso, patio de maniobras de 40 m y subestación eléctrica propia.'),
-('solar-corredor-bajio', 'Solar Corredor Industrial Bajío', 'Silao, Guanajuato', 'venta', 'solar', 27400000, 14500, 'Industrial', 'preventa', 0, 'Frente', '120 metros', '/images/solar-comercial.jpg',
-  'Terreno plano listo para desarrollar dentro del corredor automotriz del Bajío, con factibilidad de agua, drenaje y media tensión.')
-on conflict (id) do nothing;
+  if broker is null then
+    raise notice 'Sin brokers registrados: no se cargo nada. Registra una cuenta de broker en /registro y vuelve a correr este archivo.';
+    return;
+  end if;
+
+  insert into public.properties
+    (owner_id, slug, titulo, descripcion, ubicacion, lat, lng, operacion, categoria,
+     disponibilidad, precio, moneda, superficie, uso_suelo, antiguedad,
+     dato_label, dato_valor, estado, destacado)
+  values
+    (broker, 'nave-logistica-tultitlan-iii',
+     'Nave Logistica Tultitlan III',
+     'Nave de ultima generacion con 12 andenes de carga, patio de maniobras de 45 metros y piso industrial de alta resistencia. Certificacion LEED en tramite y subestacion electrica propia.',
+     'Tultitlan, Estado de Mexico', 19.6453, -99.1697, 'venta', 'industrial',
+     'inmediata', 42500000, 'MXN', 8500, 'Industrial Pesado', 2,
+     'Andenes', '12 posiciones', 'activo', true),
+
+    (broker, 'macrolote-comercial-cancun',
+     'Macrolote Comercial Cancun',
+     'Terreno con frente de 80 metros sobre avenida principal, uso de suelo mixto aprobado y factibilidad de servicios completa. Ideal para plaza comercial o desarrollo de usos mixtos.',
+     'Cancun, Quintana Roo', 21.1619, -86.8515, 'venta', 'solar',
+     'inmediata', 18900000, 'MXN', 12000, 'Mixto Comercial', 0,
+     'Frente', '80 metros lineales', 'activo', true),
+
+    (broker, 'local-ancla-polanco',
+     'Local Ancla en Polanco',
+     'Local en planta baja sobre corredor de alto trafico peatonal, con escaparate de 14 metros y salida de humos autorizada. Entrega en obra gris con instalaciones preparadas.',
+     'Polanco, Ciudad de Mexico', 19.4326, -99.1904, 'renta', 'local',
+     '30-dias', 285000, 'MXN', 320, 'Comercial', 8,
+     'Escaparate', '14 metros', 'activo', false),
+
+    (broker, 'oficina-prime-santa-fe',
+     'Oficina Prime Santa Fe',
+     'Piso completo en torre corporativa clase A, con planta libre, doble altura en recepcion y 18 cajones de estacionamiento. Edificio con certificacion energetica y acceso controlado.',
+     'Santa Fe, Ciudad de Mexico', 19.3600, -99.2740, 'renta', 'oficina',
+     'inmediata', 420000, 'MXN', 950, 'Corporativo', 5,
+     'Estacionamientos', '18 cajones', 'activo', false),
+
+    (broker, 'solar-industrial-apodaca',
+     'Solar Industrial Apodaca',
+     'Predio plano y consolidado a ocho minutos del aeropuerto internacional, con acceso para tractocamion y todos los servicios a pie de terreno. Uso de suelo industrial vigente.',
+     'Apodaca, Nuevo Leon', 25.7817, -100.1886, 'venta', 'solar',
+     'preventa', 31000000, 'MXN', 20000, 'Industrial', 0,
+     'Acceso', 'Doble carril', 'activo', false),
+
+    (broker, 'centro-distribucion-guadalajara',
+     'Centro de Distribucion Guadalajara',
+     'Centro de distribucion con 24 andenes, refrigeracion en 3.000 metros cuadrados y oficinas administrativas integradas. Operacion continua las 24 horas autorizada.',
+     'El Salto, Jalisco', 20.5167, -103.1833, 'renta', 'industrial',
+     'inmediata', 1250000, 'MXN', 15400, 'Industrial Pesado', 4,
+     'Andenes', '24 posiciones', 'activo', false)
+  on conflict (slug) do nothing;
+
+  raise notice 'Propiedades de demostracion asignadas al broker %', broker;
+end $$;

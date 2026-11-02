@@ -3,14 +3,15 @@ import { useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PropertyCard } from "@/components/PropertyCard";
-import { CATEGORIAS, fetchProperties, type Categoria, type Operacion } from "@/data/properties";
+import { propiedadesDestacadas } from "@/server/propiedades";
+import { CATEGORIAS, type Categoria, type Operacion } from "@/lib/tipos";
 
-const TITLE = "Activa Comercial — Naves, solares y locales en venta y renta";
+const TITLE = "Properties MarketPlace — Naves, solares y locales en venta y renta";
 const DESCRIPTION =
   "Marketplace inmobiliario comercial: encuentre naves industriales, solares urbanos, locales y oficinas en venta o renta con datos de superficie y precio por m².";
 
 export const Route = createFileRoute("/")({
-  loader: () => fetchProperties(),
+  loader: () => propiedadesDestacadas(),
   head: () => ({
     meta: [
       { title: TITLE },
@@ -23,20 +24,16 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const properties = Route.useLoaderData();
+  const destacadas = Route.useLoaderData();
+  const { sesion } = Route.useRouteContext();
   const navigate = useNavigate();
-  const [categoria, setCategoria] = useState<Categoria | "todos">("todos");
   const [tipo, setTipo] = useState<Categoria>("industrial");
   const [ubicacion, setUbicacion] = useState("");
   const [operacion, setOperacion] = useState<Operacion | "todas">("todas");
 
-  const destacadas = properties.filter(
-    (p) => categoria === "todos" || p.categoria === categoria,
-  );
-
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
-      <SiteHeader />
+      <SiteHeader sesion={sesion} />
 
       <section className="bg-secondary px-6 py-16 sm:py-24">
         <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
@@ -44,8 +41,8 @@ function Index() {
             Plataforma de activos comerciales y terrenos de inversión
           </h1>
           <p className="mb-12 max-w-[56ch] text-pretty text-base text-muted-foreground">
-            Acceda a inventario exclusivo de naves industriales, locales en zonas de alto tráfico y
-            solares con uso de suelo comercial para proyectos de gran escala.
+            Acceda a inventario de naves industriales, locales en zonas de alto tráfico y solares
+            con uso de suelo comercial para proyectos de gran escala.
           </p>
 
           <form
@@ -54,6 +51,7 @@ function Index() {
               navigate({
                 to: "/propiedades",
                 search: {
+                  pagina: 1,
                   categoria: tipo,
                   q: ubicacion.trim() || undefined,
                   operacion: operacion === "todas" ? undefined : operacion,
@@ -71,10 +69,11 @@ function Index() {
                 onChange={(e) => setTipo(e.target.value as Categoria)}
                 className="w-full bg-transparent text-sm font-medium focus:outline-none"
               >
-                <option value="industrial">Nave Industrial</option>
-                <option value="solar">Solar / Terreno</option>
-                <option value="local">Local Comercial</option>
-                <option value="oficina">Oficina</option>
+                {CATEGORIAS.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="flex flex-1 flex-col items-start border-border/70 px-4 py-2 md:border-r">
@@ -86,7 +85,7 @@ function Index() {
                 value={ubicacion}
                 maxLength={80}
                 onChange={(e) => setUbicacion(e.target.value)}
-                placeholder="Ciudad o Zona"
+                placeholder="Ciudad o zona"
                 className="w-full bg-transparent text-sm font-medium placeholder:text-muted-foreground/60 focus:outline-none"
               />
             </label>
@@ -118,17 +117,14 @@ function Index() {
         <div className="mx-auto max-w-6xl">
           <div className="flex gap-4 overflow-x-auto pb-4">
             {CATEGORIAS.map((c) => (
-              <button
+              <Link
                 key={c.id}
-                onClick={() => setCategoria(c.id)}
-                className={`flex-none rounded-full px-4 py-2 text-sm font-medium ring-1 ring-black/5 transition-colors ${
-                  categoria === c.id
-                    ? "bg-accent text-foreground"
-                    : "bg-card text-muted-foreground hover:bg-secondary"
-                }`}
+                to="/propiedades"
+                search={{ categoria: c.id, pagina: 1 }}
+                className="flex-none rounded-full bg-card px-4 py-2 text-sm font-medium text-muted-foreground ring-1 ring-black/5 transition-colors hover:bg-secondary"
               >
                 {c.label}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -136,17 +132,42 @@ function Index() {
 
       <section className="bg-background px-6 py-12">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-8 flex items-end justify-between">
-            <h2 className="text-2xl font-semibold">Propiedades Destacadas</h2>
-            <Link to="/propiedades" className="text-sm text-muted-foreground hover:text-primary">
-              {destacadas.length} resultados · ver todo
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <h2 className="text-2xl font-semibold">
+              {destacadas.some((p) => p.destacado)
+                ? "Propiedades destacadas"
+                : "Últimas publicaciones"}
+            </h2>
+            <Link
+              to="/propiedades"
+              search={{ pagina: 1 }}
+              className="whitespace-nowrap text-sm text-muted-foreground hover:text-primary"
+            >
+              Ver todo el inventario
             </Link>
           </div>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {destacadas.map((p) => (
-              <PropertyCard key={p.id} property={p} />
-            ))}
-          </div>
+
+          {destacadas.length === 0 ? (
+            <div className="rounded-2xl bg-card p-12 text-center ring-1 ring-black/5">
+              <p className="text-base font-medium">Todavía no hay propiedades publicadas</p>
+              <p className="mx-auto mt-2 max-w-[52ch] text-sm text-muted-foreground">
+                En cuanto un broker publique su primer activo, aparecerá aquí.
+              </p>
+              <Link
+                to="/registro"
+                search={{ rol: "broker" }}
+                className="mt-6 inline-block rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground"
+              >
+                Publicar el primero
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {destacadas.map((p) => (
+                <PropertyCard key={p.id} property={p} haySesion={Boolean(sesion)} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -157,15 +178,15 @@ function Index() {
               ¿Tiene un activo comercial para listar?
             </h2>
             <p className="mb-10 max-w-[48ch] text-pretty text-base text-primary-foreground/80">
-              Conectamos su propiedad con la red más amplia de inversores institucionales y
-              desarrolladores en México y Latinoamérica.
+              Cree su cuenta de broker, publique su inventario y reciba consultas de interesados
+              directamente en su panel.
             </p>
             <Link
-              to="/publicar"
-              search={{ plan: undefined }}
+              to="/registro"
+              search={{ rol: "broker" }}
               className="rounded-lg bg-background px-10 py-4 text-sm font-semibold text-primary transition-colors hover:bg-secondary"
             >
-              Comenzar ahora
+              Crear cuenta de broker
             </Link>
           </div>
         </div>

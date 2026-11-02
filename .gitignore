@@ -14,6 +14,7 @@ dist-ssr
 .vinxi
 .tanstack/**
 .nitro
+.vercel
 *.local
 
 # Wrangler / Cloudflare
@@ -31,3 +32,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Skills de agentes vendorizadas (se reinstalan con `npx skills add`; ver skills-lock.json)
+.agents/
+
+# Estado local del CLI de Supabase
+supabase/.temp
